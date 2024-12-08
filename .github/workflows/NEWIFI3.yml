@@ -328,7 +328,7 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_DOGCOM=n" >> .config
 
          ## 锐捷认证
-        echo "CONFIG_FIRMWARE_INCLUDE_MINIEAP=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MINIEAP=y" >> .config
 
          ## 南京校园？
         echo "CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT=n" >> .config
