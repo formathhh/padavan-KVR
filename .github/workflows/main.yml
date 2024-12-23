@@ -389,26 +389,26 @@ jobs:
 
         ##################################
         
-        echo "CONFIG_FIRMWARE_INCLUDE_FRPC=y" >> .config  ## FRPC 客户端 约8k
-        echo "CONFIG_FIRMWARE_INCLUDE_FRPS=y" >> .config  ## FRPS 服务端 约8k
-        echo "CONFIG_FIRMWARE_INCLUDE_WIREGUARD=y" >> .config  ## wireguard 约1M
-        echo "CONFIG_FIRMWARE_INCLUDE_TUNSAFE=y" >> .config ## tunsafe（wireguard的TCP方式）
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPC=n" >> .config  ## FRPC 客户端 约8k
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPS=n" >> .config  ## FRPS 服务端 约8k
+        echo "CONFIG_FIRMWARE_INCLUDE_WIREGUARD=n" >> .config  ## wireguard 约1M
+        echo "CONFIG_FIRMWARE_INCLUDE_TUNSAFE=n" >> .config ## tunsafe（wireguard的TCP方式）
         echo "CONFIG_FIRMWARE_INCLUDE_ZEROTIER=y" >> .config ## zerotier 约 20k
         echo "CONFIG_FIRMWARE_INCLUDE_ALIDDNS=y" >> .config #阿里DDNS ~20k
-        echo "CONFIG_FIRMWARE_INCLUDE_DDNSTO=n" >> .config #ddnsto 约800k  已删除 /trunk/user/httpd/common.h
+        echo "CONFIG_FIRMWARE_INCLUDE_DDNSTO=y" >> .config #ddnsto 约800k  已删除 /trunk/user/httpd/common.h
         echo "CONFIG_FIRMWARE_INCLUDE_TAILSCALE=y" >> .config #tailscale 约20k
-        echo "CONFIG_FIRMWARE_INCLUDE_NATPIERCE=y" >> .config #皎月连 约20k
+        echo "CONFIG_FIRMWARE_INCLUDE_NATPIERCE=n" >> .config #皎月连 约20k
         echo "CONFIG_FIRMWARE_INCLUDE_VNTCLI=y" >> .config #vnt客户端 约80k
         echo "CONFIG_FIRMWARE_INCLUDE_VNTS=y" >> .config #vnt服务端 约50k
         echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARED=y" >> .config #CF的隧道 约50k
         echo "CONFIG_FIRMWARE_INCLUDE_LUCKY=y" >> .config #LUCKY 约50k
-        echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARE=y" >> .config #CF-ddns 约50k
+        echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARE=n" >> .config #CF-ddns 约50k
         
-        echo "CONFIG_FIRMWARE_INCLUDE_ALIST=y" >> .config #ALIST文件列表 约80k
-        echo "CONFIG_FIRMWARE_INCLUDE_WXSEND=y" >> .config #微信推送 约50k
-        echo "CONFIG_FIRMWARE_INCLUDE_UUPLUGIN=y" >> .config #网易UU加速器 约50k
-        echo "CONFIG_FIRMWARE_INCLUDE_ALDRIVER=y" >> .config #阿里云盘 约50k
-        echo "CONFIG_FIRMWARE_INCLUDE_WYY=y" >> .config #网易云解锁 约80k
+        echo "CONFIG_FIRMWARE_INCLUDE_ALIST=n" >> .config #ALIST文件列表 约80k
+        echo "CONFIG_FIRMWARE_INCLUDE_WXSEND=n" >> .config #微信推送 约50k
+        echo "CONFIG_FIRMWARE_INCLUDE_UUPLUGIN=n" >> .config #网易UU加速器 约50k
+        echo "CONFIG_FIRMWARE_INCLUDE_ALDRIVER=n" >> .config #阿里云盘 约50k
+        echo "CONFIG_FIRMWARE_INCLUDE_WYY=n" >> .config #网易云解锁 约80k
         echo "CONFIG_FIRMWARE_INCLUDE_CADDY=y" >> .config #在线文件管理服务不占空间(4.0kb左右)
         echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config #smartdns
         echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> .config #adguardhome不占空间(7.2kb左右)
@@ -420,10 +420,10 @@ jobs:
         #echo "CONFIG_FIRMWARE_INCLUDE_NVPPROXY=n" >> .config #NVPPROXY 已删除 /trunk/user/httpd/common.h
         ##科学上网## 已删除 /trunk/user/httpd/common.h
         #echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=n" >> .config #SS plus+ 科学上网插件
-        #echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=n" >> .config #无需集成会在线下载
-        #echo "CONFIG_FIRMWARE_INCLUDE_XRAY=n" >> .config #无需集成会在线下载
-        #echo "CONFIG_FIRMWARE_INCLUDE_TROJAN=n" >> .config #无需集成会在线下载
-        #echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=n" >> .config # simple-obfs混淆插件
+        #echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=y" >> .config #无需集成会在线下载
+        #echo "CONFIG_FIRMWARE_INCLUDE_XRAY=y" >> .config #无需集成会在线下载
+        #echo "CONFIG_FIRMWARE_INCLUDE_TROJAN=y" >> .config #无需集成会在线下载
+        #echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=y" >> .config # simple-obfs混淆插件
         
         #########################################################################################
         sudo ./clear_tree
