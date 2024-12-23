@@ -318,6 +318,7 @@
 #if defined(APP_SMBD) || defined(APP_NMBD)
 			{"st_samba_lmb", "", NULL, EVM_RESTART_NMBD},
 			{"st_samba_workgroup", "", NULL, EVM_RESTART_NMBD},
+			{"st_samba_options", "", NULL, EVM_RESTART_NMBD},
 #endif
 #if defined(APP_SMBD) || defined(APP_FTPD)
 			{"st_max_user", "", NULL, EVM_RESTART_FTPD|EVM_RESTART_SMBD},
@@ -1071,6 +1072,11 @@
 			{"caddy_wip6", "", NULL, EVM_RESTART_CADDY},
 			{"caddy_wname", "", NULL, EVM_RESTART_CADDY},
 			{"caddy_wpassword", "", NULL, EVM_RESTART_CADDY},
+			{"caddy_dwan", "", NULL, EVM_RESTART_CADDY},
+			{"caddy_dwip6", "", NULL, EVM_RESTART_CADDY},
+			{"caddy_Fname", "", NULL, EVM_RESTART_CADDY},
+			{"caddy_Fpassword", "", NULL, EVM_RESTART_CADDY},
+			{"caddy_webdav", "", NULL, EVM_RESTART_CADDY},
 			{"scripts.caddy_script.sh", "File", NULL, EVM_RESTART_CADDY},
 			{0,0,0,0}
 	};
@@ -1369,6 +1375,9 @@
 	struct variable variables_LUCKY[] = {
 			{"lucky_enable", "", NULL, EVM_RESTART_LUCKY},
 			{"lucky_cmd", "", NULL, EVM_RESTART_LUCKY},
+			{"lucky_bin", "", NULL, EVM_RESTART_LUCKY},
+			{"lucky_daji", "", NULL, EVM_RESTART_LUCKY},
+			{"lucky_tag", "", NULL, EVM_RESTART_LUCKY},
 			{"scripts.lucky.conf", "File", NULL, EVM_RESTART_LUCKY},
 			{0,0,0,0}
 	};
@@ -1465,6 +1474,7 @@
 			{"wxsend_notify_3", "", NULL, EVM_RESTART_WXSEND},
 			{"wxsend_notify_4", "", NULL, EVM_RESTART_WXSEND},
 			{"wxsend_login", "", NULL, EVM_RESTART_WXSEND},
+			{"wxsend_ssh", "", NULL, EVM_RESTART_WXSEND},
 			{"scripts.wxsend_script.sh", "File", NULL, EVM_RESTART_WXSEND},
 			{0,0,0,0}
 	};
