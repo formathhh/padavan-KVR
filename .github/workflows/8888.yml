@@ -36,7 +36,7 @@ jobs:
         sh dl_toolchain.sh
         mkdir -p /opt/images/
         ##### 修改内存空间和 storage空间17m
-        sed -i 's/0x200000/0x1100000/g' /opt/rt-n56u/trunk/configs/boards/K2P-USB/kernel-3.4.x-5.0.config
+        sed -i 's/0x200000/0x1100000/g' /opt/rt-n56u/trunk/configs/boards/HC5661A/kernel-3.4.x-5.0.config
         sed -i 's/size_etc="6M"/size_etc="17M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/size_tmp="24M"/size_tmp="120M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/mtd_part_size=65536/mtd_part_size=17825792/g' /opt/rt-n56u/trunk/user/scripts/mtd_storage.sh
@@ -375,5 +375,5 @@ jobs:
       uses: actions/upload-artifact@master
       if: always()
       with:
-        name: K2P-USB-32M-512M
+        name: HC5661A
         path: /opt/images
