@@ -1003,7 +1003,7 @@
 			{"vnts_web_user", "", NULL, EVM_RESTART_VNTS},
 			{"vnts_web_pass", "", NULL, EVM_RESTART_VNTS},
 			{"vnts_web_wan", "", NULL, EVM_RESTART_VNTS},
-			{"vnts_vnts_bin", "", NULL, EVM_RESTART_VNTS},
+			{"vnts_bin", "", NULL, EVM_RESTART_VNTS},
 			{"vnts_log", "", NULL, EVM_RESTART_VNTS},
 			{"vnts.log", "File", NULL, EVM_RESTART_VNTS},
 			{0,0,0,0}
