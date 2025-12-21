@@ -397,7 +397,7 @@ function applyRule(){
 											</td>
 										</tr>
 										<tr id="row_waliddns" style="display:none">
-											<th width="50%" >穿透服务</th>
+											<th width="50%" >内网穿透</th>
 											<td>
 													<div class="main_itoggle">
 													<div id="w_aliddns_on_of">
@@ -411,7 +411,7 @@ function applyRule(){
 											</td>
 										</tr>
 										<tr id="row_wfrp" style="display:none">
-											<th width="50%" >内网穿透</th>
+											<th width="50%" >Frp服务</th>
 											<td>
 													<div class="main_itoggle">
 													<div id="w_frp_on_of">
