@@ -321,7 +321,7 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n" >> .config
         
         ## OpenVPN。需要 IPv6 支持。openssl 约 1.2MB，openvpn 约 0.4MB
-        echo "CONFIG_FIRMWARE_INCLUDE_OPENVPN=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENVPN=y" >> .config
 
         ## 广东工业校园认证
         echo "CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM=n" >> .config
