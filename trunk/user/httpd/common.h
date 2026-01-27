@@ -106,11 +106,11 @@ typedef u_int8_t u8;
 #define EVM_RESTART_BAFA			(1ULL << 50) //巴法云
 //#define EVM_RESTART_ADBYBY			(1ULL << 51) //adb去广告
 #define EVM_RESTART_ZEROTIER			(1ULL << 51) //zeriter异地组网
-//#define EVM_RESTART_DDNSTO	    		(1ULL << 52) //ddnsto内网穿透
+#define EVM_RESTART_DDNSTO	    		(1ULL << 54) //ddnsto内网穿透
 #define EVM_RESTART_WIREGUARD			(1ULL << 52) //wg异地组网
 #define EVM_RESTART_ALDRIVER			(1ULL << 53) //阿里云盘挂载
 //#define EVM_RESTART_VIRTUALHERE		(1ULL << 53) //virtualhere
-#define EVM_RESTART_UUPLUGIN			(1ULL << 54) //UU加速器
+//#define EVM_RESTART_UUPLUGIN			(1ULL << 54) //UU加速器
 //#define EVM_RESTART_KOOLPROXY			(1ULL << 55) //kp去广告
 #define EVM_RESTART_LUCKY			(1ULL << 55) //lucky
 #define EVM_RESTART_WXSEND			(1ULL << 56) //微信推送
