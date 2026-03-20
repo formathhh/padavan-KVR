@@ -55,101 +55,59 @@ jobs:
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
         ################################################################################################
         ###  清除默认配置###
-        sed -i '/CONFIG_FIRMWARE_ENABLE_IPV6/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_USB/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_UFSD/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_FAT/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_EXFAT/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_EXT2/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_EXT3/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_EXT4/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_XFS/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_FUSE/d' .config
-        sed -i '/CONFIG_FIRMWARE_ENABLE_SWAP/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_UVC/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_HID/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SERIAL/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_AUDIO/d' .config
-
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_XFRM/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_QOS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_IMQ/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_IFB/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_IPSET/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_NFSD/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_NFSC/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_CIFS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_NTFS_3G/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_LPRD/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_U2EC/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_TCPDUMP/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_HDPARM/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_PARTED/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMBD/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMBD36/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_WINS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMBD_SYSLOG/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_FTPD/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_RPL2TP/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_EAP_PEAP/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_DDNS_SSL/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_HTTPS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SFTP/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_DROPBEAR/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_DROPBEAR_FAST_CODE/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENSSH/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENVPN/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SSWAN/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_XUPNPD/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_MINIDLNA/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_FIREFLY/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW/d' .config
-
+        # VNT 组网
+        echo "CONFIG_FIRMWARE_INCLUDE_VNTCLI=y" >> .config          # VNT客户端
+        echo "CONFIG_FIRMWARE_INCLUDE_VNTS=y" >> .config            # VNT服务端
         
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_TRANSMISSION/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_TRANSMISSION_WEB_CONTROL/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_ARIA/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_CURL/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_DOGCOM/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_MINIEAP/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_NAPT66/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SSSERVER/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_SERVER/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CLIENT/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CMD/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_VLMCSD/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_TTYD/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_LRZSZ/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_HTOP/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_NANO/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_IPERF3/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_DUMP1090/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_RTL_SDR/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_MTR/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOCAT/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SRELAY/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_MENTOHUST/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPC/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_TUNSAFE/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_WIREGUARD/d' .config   
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_ZEROTIER/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_ALIDDNS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_V2RAY/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_XRAY/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_TROJAN/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SSOBFS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_NPC/d' .config
-        sed -i '/CONFIG_FIRMWARE_WEBUI_HIDE_VPN/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENVPN/d' .config
+        # 虚拟组网
+        echo "CONFIG_FIRMWARE_INCLUDE_ZEROTIER=y" >> .config        # ZeroTier
+        echo "CONFIG_FIRMWARE_INCLUDE_TAILSCALE=y" >> .config       # Tailscale
+        echo "CONFIG_FIRMWARE_INCLUDE_NATPIERCE=y" >> .config       # 皎月连
+        echo "CONFIG_FIRMWARE_INCLUDE_EASYTIER=y" >> .config        # EasyTier
+        
+        # 内网穿透/工具
+        echo "CONFIG_FIRMWARE_INCLUDE_LUCKY=y" >> .config           # Lucky
+        echo "CONFIG_FIRMWARE_INCLUDE_VIRTUALHERE=y" >> .config     # VirtualHere
+        
+        # DDNS
+        echo "CONFIG_FIRMWARE_INCLUDE_ALIDDNS=y" >> .config         # 阿里DDNS
+        echo "CONFIG_FIRMWARE_INCLUDE_DDNSTO=y" >> .config          # DDNSTO
+        
+        # OpenVPN（客户端+服务器）
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENVPN=y" >> .config         # OpenVPN客户端
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENVPN_SERVER=y" >> .config  # OpenVPN服务器
+        
+        # ========== 基础工具（保留必要）==========
+        echo "CONFIG_FIRMWARE_INCLUDE_CURL=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TTYD=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_LRZSZ=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_HTOP=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NANO=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_IPERF3=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MTR=y" >> .config
+        
+        # ========== 其他所有插件全部禁用 ==========
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPC=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPS=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NPC=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARE=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARED=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_WXSEND=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_BAFA=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ALIST=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MSD_LITE=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_WIREGUARD=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TUNSAFE=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_UUPLUGIN=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ALDRIVER=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_WYY=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_CADDY=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NETCAT=n" >> .config
+        
+        # VirtualHere 特殊处理
+        sed -i 's/EVM_RESTART_ALDRIVER/EVM_RESTART_VIRTUALHERE/g' ./user/httpd/common.h
         # 清除默认配置结束
         ######################################################################
         #以下选项是定义你需要的功能，（y=集成,n=忽略），重新写入到.config文件
