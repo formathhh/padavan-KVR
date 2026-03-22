@@ -1,8 +1,10 @@
+
 name: 360P2
 
 on: 
   workflow_dispatch:
 
+#设置仓库的读写权限
 permissions:
   contents: write
 env:
@@ -37,7 +39,7 @@ jobs:
         mkdir -p /opt/images/
         
         ##### 修改内存空间和 storage空间
-        sed -i 's/SIZ=0x80000/SIZ=0x500000/g' /opt/rt-n56u/trunk/configs/boards/360P2/kernel-3.4.x.config
+        sed -i 's/SIZ=0x80000/SIZ=0x500000/g' /opt/rt-n56u/trunk/configs/boards/MI-MINI/kernel-3.4.x.config
         sed -i 's/size_etc="6M"/size_etc="5M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/size_tmp="24M"/size_tmp="30M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/mtd_part_size=65536/mtd_part_size=5242880/g' /opt/rt-n56u/trunk/user/scripts/mtd_storage.sh
@@ -442,7 +444,7 @@ jobs:
       uses: actions/upload-artifact@master
       if: always()
       with:
-        name: 360P2
+        name: MI-MINI
         path: /opt/images
 
     - name: Release
@@ -452,7 +454,7 @@ jobs:
         body: |
            > ### ![](https://img.shields.io/badge/%E7%BC%96%E8%AF%91%E6%97%B6%E9%97%B4-${{ env.build_time }}-8267?logo=github&labelColor=%E9%A1%BB)![](https://img.shields.io/github/downloads/${{ github.repository }}/${{ env.tag }}/total?label=%E4%B8%8B%E8%BD%BD%E6%AC%A1%E6%95%B0&logo=github)
 
-           `360P2.config` 是集成的插件模板
+           `型号.config` 是集成的插件模板
            
         tag_name: ${{ env.tag }}
         files: /opt/images/*
