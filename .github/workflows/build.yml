@@ -1,0 +1,47 @@
+# 克隆仓库
+git clone https://github.com/formathhh/Padavan-3.4-KVR.git
+cd Padavan-3.4-KVR
+
+# 创建目录和文件
+mkdir -p .github/workflows
+
+# 创建 build.yml
+cat > .github/workflows/build.yml << 'EOF'
+name: Build Padavan Firmware
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential gcc g++ binutils patch bzip2 flex bison make autoconf gettext texinfo unzip sharutils subversion libncurses5-dev ncurses-term zlib1g-dev gawk git
+
+    - name: Build firmware
+      run: |
+        cd trunk
+        sudo ./clear_tree
+        sudo ./build_firmware
+
+    - name: Upload firmware
+      uses: actions/upload-artifact@v3
+      with:
+        name: padavan-firmware
+        path: trunk/images/
+EOF
+
+# 提交并推送
+git add .github/workflows/build.yml
+git commit -m "Add GitHub Actions workflow for auto build"
+git push origin main
