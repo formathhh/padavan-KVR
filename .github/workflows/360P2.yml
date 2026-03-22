@@ -54,16 +54,20 @@ jobs:
         
         # ========== 修复 VirtualHere 编译错误 ==========
         echo "=== 修复 VirtualHere 宏定义 ==="
-        echo '/* VirtualHere 宏定义修复 */' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '#ifndef EVM_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '#define EVM_RESTART_VIRTUALHERE  (1 << 14)' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '#ifndef EVT_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '#define EVT_RESTART_VIRTUALHERE  EVM_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '#ifndef RCN_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '#define RCN_RESTART_VIRTUALHERE  1' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        cat >> /opt/rt-n56u/trunk/user/httpd/common.h << 'VHERE'
+/* VirtualHere 宏定义修复 */
+#ifndef EVM_RESTART_VIRTUALHERE
+#define EVM_RESTART_VIRTUALHERE  (1 << 14)
+#endif
+
+#ifndef EVT_RESTART_VIRTUALHERE
+#define EVT_RESTART_VIRTUALHERE  EVM_RESTART_VIRTUALHERE
+#endif
+
+#ifndef RCN_RESTART_VIRTUALHERE
+#define RCN_RESTART_VIRTUALHERE  1
+#endif
+VHERE
         
         cd /opt/rt-n56u/trunk/user/httpd
         sed -i 's/EVM_RESTART_VIRTUALHERE/EVT_RESTART_VIRTUALHERE/g' variables.c
@@ -76,20 +80,22 @@ jobs:
         sed -i '/CONFIG_EXT4_FS/d' $KERNEL_CONFIG
         sed -i '/CONFIG_EXT4_USE_FOR_EXT23/d' $KERNEL_CONFIG
         
-        echo "" >> $KERNEL_CONFIG
-        echo "# EXT4 文件系统支持" >> $KERNEL_CONFIG
-        echo "CONFIG_EXT4_FS=y" >> $KERNEL_CONFIG
-        echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> $KERNEL_CONFIG
-        echo "CONFIG_EXT4_FS_XATTR=y" >> $KERNEL_CONFIG
-        echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> $KERNEL_CONFIG
-        echo "CONFIG_EXT4_FS_SECURITY=y" >> $KERNEL_CONFIG
+        cat >> $KERNEL_CONFIG << 'EXT4CFG'
+
+# EXT4 文件系统支持
+CONFIG_EXT4_FS=y
+CONFIG_EXT4_USE_FOR_EXT23=y
+CONFIG_EXT4_FS_XATTR=y
+CONFIG_EXT4_FS_POSIX_ACL=y
+CONFIG_EXT4_FS_SECURITY=y
+EXT4CFG
         
         sed -i 's/SIZ=0x80000/SIZ=0x500000/g' $KERNEL_CONFIG
         sed -i 's/size_etc="6M"/size_etc="5M"/g' user/scripts/dev_init.sh
         sed -i 's/size_tmp="24M"/size_tmp="30M"/g' user/scripts/dev_init.sh
         
         # ========== 创建自动配置脚本 ==========
-        cat > auto_config.sh << 'EOF'
+        cat > auto_config.sh << 'AUTOSCRIPT'
 #!/bin/bash
 cd linux-3.4.x
 [ ! -f .config ] && cp ../configs/boards/360P2/kernel-3.4.x.config .config
@@ -99,7 +105,8 @@ echo "CONFIG_EXT4_FS_XATTR=y" >> .config
 echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> .config
 echo "CONFIG_EXT4_FS_SECURITY=y" >> .config
 yes "" | make oldconfig
-EOF
+AUTOSCRIPT
+        
         chmod +x auto_config.sh
         
     - name: Build Firmware
@@ -114,12 +121,10 @@ EOF
         fi
         
         cp -f configs/templates/$TNAME.config .config
-        
-        # 启用 OpenSSL
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
         
-        # 添加基础功能
-        cat >> .config << 'CONFIG'
+        # 添加功能配置
+        cat >> .config << 'FEATURES'
 CONFIG_FIRMWARE_ENABLE_IPV6=y
 CONFIG_FIRMWARE_ENABLE_USB=y
 CONFIG_FIRMWARE_ENABLE_EXT4=y
@@ -128,22 +133,52 @@ CONFIG_FIRMWARE_ENABLE_SWAP=y
 CONFIG_FIRMWARE_INCLUDE_SERIAL=y
 CONFIG_FIRMWARE_INCLUDE_XFRM=y
 CONFIG_FIRMWARE_INCLUDE_QOS=y
+CONFIG_FIRMWARE_INCLUDE_IMQ=y
+CONFIG_FIRMWARE_INCLUDE_IFB=y
+CONFIG_FIRMWARE_INCLUDE_LPRD=y
+CONFIG_FIRMWARE_INCLUDE_U2EC=y
+CONFIG_FIRMWARE_INCLUDE_TCPDUMP=y
+CONFIG_FIRMWARE_INCLUDE_HDPARM=y
+CONFIG_FIRMWARE_INCLUDE_PARTED=y
+CONFIG_FIRMWARE_INCLUDE_SMBD=y
+CONFIG_FIRMWARE_INCLUDE_SMBD36=y
+CONFIG_FIRMWARE_INCLUDE_FTPD=y
+CONFIG_FIRMWARE_INCLUDE_EAP_PEAP=y
+CONFIG_FIRMWARE_INCLUDE_DDNS_SSL=y
+CONFIG_FIRMWARE_INCLUDE_HTTPS=y
+CONFIG_FIRMWARE_INCLUDE_SFTP=y
+CONFIG_FIRMWARE_INCLUDE_DROPBEAR=y
+CONFIG_FIRMWARE_INCLUDE_OPENSSH=y
+CONFIG_FIRMWARE_INCLUDE_OPENVPN=y
+CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC=y
+CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y
 CONFIG_FIRMWARE_INCLUDE_TTYD=y
+CONFIG_FIRMWARE_INCLUDE_LRZSZ=y
+CONFIG_FIRMWARE_INCLUDE_HTOP=y
+CONFIG_FIRMWARE_INCLUDE_NANO=y
+CONFIG_FIRMWARE_INCLUDE_IPERF3=y
+CONFIG_FIRMWARE_INCLUDE_MTR=y
+CONFIG_FIRMWARE_INCLUDE_CURL=y
+CONFIG_FIRMWARE_INCLUDE_NAPT66=y
 CONFIG_FIRMWARE_INCLUDE_ZEROTIER=y
 CONFIG_FIRMWARE_INCLUDE_TAILSCALE=y
+CONFIG_FIRMWARE_INCLUDE_ALIDDNS=y
+CONFIG_FIRMWARE_INCLUDE_NATPIERCE=y
+CONFIG_FIRMWARE_INCLUDE_VNTCLI=y
+CONFIG_FIRMWARE_INCLUDE_VNTS=y
+CONFIG_FIRMWARE_INCLUDE_EASYTIER=y
 CONFIG_FIRMWARE_INCLUDE_VIRTUALHERE=y
-CONFIG_FIRMWARE_INCLUDE_OPENVPN=y
-CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y
-CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC=y
-CONFIG
+CONFIG_FIRMWARE_INCLUDE_MSD_LITE=y
+FEATURES
+        
         # 运行内核配置
         ./auto_config.sh
         
-        # 编译
+        # 开始编译
+        echo "开始编译..."
         sudo ./clear_tree
         sudo ./build_firmware_modify $TNAME 0
         
-        # 移动固件
         if [ -d images ]; then
           sudo mv -f images/*.trx /opt/images/ 2>/dev/null || true
           cp -f .config /opt/images/${TNAME}.config 2>/dev/null || true
@@ -170,4 +205,3 @@ CONFIG
           `360P2.config` 是集成的插件模板
         tag_name: ${{ env.tag }}
         files: /opt/images/*
-      
