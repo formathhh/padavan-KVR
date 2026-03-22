@@ -22,7 +22,9 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo apt-get update
-        sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget jq
+        sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot \
+        cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
+        pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget jq
         
     - name: Install UPX
       uses: crazy-max/ghaction-upx@v3
@@ -37,78 +39,283 @@ jobs:
         sh dl_toolchain.sh
         mkdir -p /opt/images/
         
-        # 修改 Web UI 为白色主题
-        cd /opt/rt-n56u/trunk/user/httpd
-        find . -name "*.c" -o -name "*.h" | while read file; do
-          sed -i 's/bgcolor="[^"]*"/bgcolor="#f5f5f5"/g' "$file"
-          sed -i 's/background:[^;]*;/background:#f5f5f5;/g' "$file"
-          sed -i 's/color:[^;]*;/color:#333333;/g' "$file"
-        done
+        echo "=== 修复 VirtualHere 宏定义 ==="
+        echo '/* VirtualHere 宏定义修复 */' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#ifndef EVM_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#define EVM_RESTART_VIRTUALHERE  (1 << 14)' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#ifndef EVT_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#define EVT_RESTART_VIRTUALHERE  EVM_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#ifndef RCN_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#define RCN_RESTART_VIRTUALHERE  1' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
         
-        # 修复 VirtualHere
-        cat >> /opt/rt-n56u/trunk/user/httpd/common.h << "EOF"
-/* VirtualHere 宏定义修复 */
-#ifndef EVM_RESTART_VIRTUALHERE
-#define EVM_RESTART_VIRTUALHERE  (1 << 14)
-#endif
-#ifndef EVT_RESTART_VIRTUALHERE
-#define EVT_RESTART_VIRTUALHERE  EVM_RESTART_VIRTUALHERE
-#endif
-#ifndef RCN_RESTART_VIRTUALHERE
-#define RCN_RESTART_VIRTUALHERE  1
-#endif
-EOF
         cd /opt/rt-n56u/trunk/user/httpd
         sed -i 's/EVM_RESTART_VIRTUALHERE/EVT_RESTART_VIRTUALHERE/g' variables.c
         
-        # 修复 EXT4
+        echo "=== 修复 EXT4 内核配置 ==="
         cd /opt/rt-n56u/trunk
         KERNEL_CONFIG="configs/boards/360P2/kernel-3.4.x.config"
-        sed -i '/CONFIG_EXT4_FS/d' $KERNEL_CONFIG
-        cat >> $KERNEL_CONFIG << "EOF"
-CONFIG_EXT4_FS=y
-CONFIG_EXT4_USE_FOR_EXT23=y
-CONFIG_EXT4_FS_XATTR=y
-CONFIG_EXT4_FS_POSIX_ACL=y
-CONFIG_EXT4_FS_SECURITY=y
-EOF
-        sed -i 's/SIZ=0x80000/SIZ=0x500000/g' $KERNEL_CONFIG
         
-        # 创建自动配置脚本
-        cat > auto_config.sh << "EOF"
-#!/bin/bash
-cd linux-3.4.x
-[ ! -f .config ] && cp ../configs/boards/360P2/kernel-3.4.x.config .config
-echo "CONFIG_EXT4_FS=y" >> .config
-echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> .config
-echo "CONFIG_EXT4_FS_XATTR=y" >> .config
-echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> .config
-echo "CONFIG_EXT4_FS_SECURITY=y" >> .config
-yes "" | make oldconfig
-EOF
-        chmod +x auto_config.sh
+        sed -i '/CONFIG_EXT4_FS/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_USE_FOR_EXT23/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_FS_XATTR/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_FS_POSIX_ACL/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_FS_SECURITY/d' $KERNEL_CONFIG
+        
+        echo "" >> $KERNEL_CONFIG
+        echo "# EXT4 文件系统支持 - 完整配置" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_FS=y" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_FS_XATTR=y" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_FS_SECURITY=y" >> $KERNEL_CONFIG
+        
+        sed -i 's/SIZ=0x80000/SIZ=0x500000/g' /opt/rt-n56u/trunk/configs/boards/360P2/kernel-3.4.x.config
+        sed -i 's/size_etc="6M"/size_etc="5M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
+        sed -i 's/size_tmp="24M"/size_tmp="30M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
+        sed -i 's/mtd_part_size=65536/mtd_part_size=5242880/g' /opt/rt-n56u/trunk/user/scripts/mtd_storage.sh
+        
+        echo "=== 创建自动配置脚本 ==="
+        echo '#!/bin/bash' > /opt/rt-n56u/trunk/auto_config.sh
+        echo 'cd /opt/rt-n56u/trunk/linux-3.4.x' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo 'if [ ! -f .config ]; then' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo '    cp ../configs/boards/360P2/kernel-3.4.x.config .config' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo 'fi' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo 'echo "CONFIG_EXT4_FS=y" >> .config' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo 'echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> .config' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo 'echo "CONFIG_EXT4_FS_XATTR=y" >> .config' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo 'echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> .config' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo 'echo "CONFIG_EXT4_FS_SECURITY=y" >> .config' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo 'yes "" | make oldconfig' >> /opt/rt-n56u/trunk/auto_config.sh
+        echo 'cd /opt/rt-n56u/trunk' >> /opt/rt-n56u/trunk/auto_config.sh
+        
+        chmod +x /opt/rt-n56u/trunk/auto_config.sh
         
     - name: Build Firmware
       env:
         TNAME: 360P2
       run: |
         cd /opt/rt-n56u/trunk
+        
+        if [ ! -f configs/templates/$TNAME.config ] ; then
+          echo "configs/templates/$TNAME.config 没有找到 "
+          exit 1
+        fi
+        
         cp -f configs/templates/$TNAME.config .config
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
-        cat >> .config << "EOF"
-CONFIG_FIRMWARE_ENABLE_IPV6=y
-CONFIG_FIRMWARE_ENABLE_USB=y
-CONFIG_FIRMWARE_ENABLE_EXT4=y
-CONFIG_FIRMWARE_INCLUDE_ZEROTIER=y
-CONFIG_FIRMWARE_INCLUDE_TAILSCALE=y
-CONFIG_FIRMWARE_INCLUDE_VIRTUALHERE=y
-EOF
+        
+        sed -i '/CONFIG_FIRMWARE_ENABLE_IPV6/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_USB/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_UFSD/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_FAT/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_EXFAT/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_EXT2/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_EXT3/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_EXT4/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_XFS/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_FUSE/d' .config
+        sed -i '/CONFIG_FIRMWARE_ENABLE_SWAP/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_UVC/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_HID/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SERIAL/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_AUDIO/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_XFRM/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_QOS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_IMQ/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_IFB/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_IPSET/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NFSD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NFSC/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_CIFS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NTFS_3G/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_LPRD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_U2EC/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TCPDUMP/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_HDPARM/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_PARTED/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMBD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMBD36/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_WINS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMBD_SYSLOG/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FTPD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_RPL2TP/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_EAP_PEAP/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DDNS_SSL/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_HTTPS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SFTP/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DROPBEAR/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DROPBEAR_FAST_CODE/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENSSH/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENVPN/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SSWAN/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_XUPNPD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MINIDLNA/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FIREFLY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TRANSMISSION/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TRANSMISSION_WEB_CONTROL/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ARIA/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_CURL/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DOGCOM/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MINIEAP/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NAPT66/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SSSERVER/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_SERVER/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CLIENT/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CMD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_VLMCSD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TTYD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_LRZSZ/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_HTOP/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NANO/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_IPERF3/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DUMP1090/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_RTL_SDR/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MTR/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOCAT/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SRELAY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MENTOHUST/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPC/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TUNSAFE/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_WIREGUARD/d' .config   
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ZEROTIER/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ALIDDNS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_V2RAY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_XRAY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TROJAN/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SSOBFS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NPC/d' .config
+        sed -i '/CONFIG_FIRMWARE_WEBUI_HIDE_VPN/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENVPN/d' .config
+        
+        echo "CONFIG_FIRMWARE_ENABLE_IPV6=y" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_USB=y" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_UFSD=n" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_FAT=n" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_EXFAT=n" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_EXT2=n" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_EXT3=n" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_EXT4=y" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_XFS=n" >> .config 
+        echo "CONFIG_FIRMWARE_ENABLE_FUSE=y" >> .config
+        echo "CONFIG_FIRMWARE_ENABLE_SWAP=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_UVC=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_HID=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SERIAL=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_AUDIO=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_XFRM=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_QOS=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_IMQ=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_IFB=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NFSD=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_CIFS=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NTFS_3G=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_LPRD=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_U2EC=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TCPDUMP=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_HDPARM=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_PARTED=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SMBD=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SMBD36=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SMBD_SYSLOG=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_FTPD=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_RPL2TP=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_EAP_PEAP=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DDNS_SSL=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_HTTPS=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SFTP=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DROPBEAR=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DROPBEAR_FAST_CODE=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSH=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SSWAN=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENVPN=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_XUPNPD=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MINIDLNA=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_FIREFLY=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TRANSMISSION=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TRANSMISSION_WEB_CONTROL=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ARIA=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_CURL=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DOGCOM=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MINIEAP=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NAPT66=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SSSERVER=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_SERVER=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CLIENT=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CMD=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_VLMCSD=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TTYD=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_LRZSZ=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_HTOP=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NANO=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_IPERF3=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DUMP1090=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_RTL_SDR=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MTR=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SOCAT=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SRELAY=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPC=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPS=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_WIREGUARD=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TUNSAFE=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ZEROTIER=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ALIDDNS=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DDNSTO=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TAILSCALE=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NATPIERCE=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_VNTCLI=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_VNTS=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARED=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_LUCKY=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARE=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_EASYTIER=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ALIST=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_WXSEND=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_UUPLUGIN=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ALDRIVER=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_VIRTUALHERE=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_WYY=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_BAFA=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_CADDY=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NETCAT=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MSD_LITE=y" >> .config
+        
+        echo "=== 运行内核自动配置 ==="
         ./auto_config.sh
+        
+        echo "开始编译..."
         sudo ./clear_tree
         sudo ./build_firmware_modify $TNAME 0
+        
         if [ -d images ]; then
           sudo mv -f images/*.trx /opt/images/ 2>/dev/null || true
+          cp -f .config /opt/images/${TNAME}.config 2>/dev/null || true
         fi
+        
+        echo "build_time=$(date '+%Y年%m月%d日%H:%M:%S' | jq -sRr @uri)" >> $GITHUB_ENV
         echo "tag=$(date '+%Y-%m-%d')" >> $GITHUB_ENV
         
     - name: Upload packages
@@ -123,5 +330,10 @@ EOF
       if: success()
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        body: |
+           > ### ![](https://img.shields.io/badge/%E7%BC%96%E8%AF%91%E6%97%B6%E9%97%B4-${{ env.build_time }}-8267?logo=github&labelColor=%E9%A1%BB)![](https://img.shields.io/github/downloads/${{ github.repository }}/${{ env.tag }}/total?label=%E4%B8%8B%E8%BD%BD%E6%AC%A1%E6%95%B0&logo=github)
+
+           `360P2.config` 是集成的插件模板
+           
         tag_name: ${{ env.tag }}
         files: /opt/images/*
