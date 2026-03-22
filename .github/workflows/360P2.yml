@@ -1,4 +1,4 @@
-name: 360P2 云编译
+name: 360P2
 
 on: 
   workflow_dispatch:
@@ -36,10 +36,10 @@ jobs:
         sh dl_toolchain.sh
         mkdir -p /opt/images/
         
-        ##### 修改内存空间和 storage空间 (360P2 16MB 闪存)
-        sed -i 's/SIZ=0x80000/SIZ=0x80000/g' /opt/rt-n56u/trunk/configs/boards/360P2/kernel-3.4.x.config
-        sed -i 's/size_etc="6M"/size_etc="8M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
-        sed -i 's/size_tmp="24M"/size_tmp="16M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
+        ##### 修改内存空间和 storage空间
+        sed -i 's/SIZ=0x80000/SIZ=0x500000/g' /opt/rt-n56u/trunk/configs/boards/360P2/kernel-3.4.x.config
+        sed -i 's/size_etc="6M"/size_etc="5M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
+        sed -i 's/size_tmp="24M"/size_tmp="30M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/mtd_part_size=65536/mtd_part_size=5242880/g' /opt/rt-n56u/trunk/user/scripts/mtd_storage.sh
     - name: Build Firmware
       env:
@@ -53,10 +53,6 @@ jobs:
         fi
         cp -f configs/templates/$TNAME.config .config
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
-
-       # 修复内核配置交互问题 - 直接修改内核配置文件
-        echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> /opt/rt-n56u/trunk/linux-3.4.x/.config
-        echo "CONFIG_EXT4_FS=y" >> /opt/rt-n56u/trunk/linux-3.4.x/.config
         ################################################################################################
         ###  清除默认配置###
         sed -i '/CONFIG_FIRMWARE_ENABLE_IPV6/d' .config
