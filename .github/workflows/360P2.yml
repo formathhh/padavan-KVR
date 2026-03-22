@@ -39,48 +39,39 @@ jobs:
         sh dl_toolchain.sh
         mkdir -p /opt/images/
         
-        # ========== 修复 VirtualHere 编译错误 ==========
+        # 修复 VirtualHere 编译错误
         echo "=== 修复 VirtualHere 宏定义 ==="
         
-        cat >> /opt/rt-n56u/trunk/user/httpd/common.h << 'EOF'
-
-/* VirtualHere 宏定义修复 - 由 GitHub Actions 添加 */
-#ifndef EVM_RESTART_VIRTUALHERE
-#define EVM_RESTART_VIRTUALHERE  (1 << 14)
-#endif
-
-#ifndef EVT_RESTART_VIRTUALHERE
-#define EVT_RESTART_VIRTUALHERE  EVM_RESTART_VIRTUALHERE
-#endif
-
-#ifndef RCN_RESTART_VIRTUALHERE
-#define RCN_RESTART_VIRTUALHERE  1
-#endif
-EOF
+        echo '/* VirtualHere 宏定义修复 */' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#ifndef EVM_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#define EVM_RESTART_VIRTUALHERE  (1 << 14)' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#ifndef EVT_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#define EVT_RESTART_VIRTUALHERE  EVM_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#ifndef RCN_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#define RCN_RESTART_VIRTUALHERE  1' >> /opt/rt-n56u/trunk/user/httpd/common.h
+        echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
         
         cd /opt/rt-n56u/trunk/user/httpd
         sed -i 's/EVM_RESTART_VIRTUALHERE/EVT_RESTART_VIRTUALHERE/g' variables.c
         
-        # ========== 修复 EXT4 内核配置 ==========
+        # 修复 EXT4 内核配置
         echo "=== 修复 EXT4 内核配置 ==="
         cd /opt/rt-n56u/trunk
-        
-        # 修改板级内核配置
         KERNEL_CONFIG="configs/boards/360P2/kernel-3.4.x.config"
         
-        # 删除旧的 EXT4 配置
         sed -i '/CONFIG_EXT4_FS/d' $KERNEL_CONFIG
         sed -i '/CONFIG_EXT4_USE_FOR_EXT23/d' $KERNEL_CONFIG
         
-        # 添加正确的 EXT4 配置
-        cat >> $KERNEL_CONFIG << 'EOF'
-
-# EXT4 文件系统支持
-CONFIG_EXT4_FS=y
-CONFIG_EXT4_USE_FOR_EXT23=y
-CONFIG_EXT4_FS_POSIX_ACL=y
-CONFIG_EXT4_FS_SECURITY=y
-EOF
+        echo "" >> $KERNEL_CONFIG
+        echo "# EXT4 文件系统支持" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_FS=y" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_FS_SECURITY=y" >> $KERNEL_CONFIG
         
         # 修改内存空间
         sed -i 's/SIZ=0x80000/SIZ=0x500000/g' /opt/rt-n56u/trunk/configs/boards/360P2/kernel-3.4.x.config
@@ -196,13 +187,11 @@ EOF
         sed -i '/CONFIG_FIRMWARE_INCLUDE_NPC/d' .config
         sed -i '/CONFIG_FIRMWARE_WEBUI_HIDE_VPN/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENVPN/d' .config
-        # 清除默认配置结束
         
         ######################################################################
-        # 添加所有 MI-MINI 的功能配置
+        # 添加所有功能配置
         ######################################################################
         
-        # 系统组件
         echo "CONFIG_FIRMWARE_ENABLE_IPV6=y" >> .config
         echo "CONFIG_FIRMWARE_ENABLE_USB=y" >> .config
         echo "CONFIG_FIRMWARE_ENABLE_UFSD=n" >> .config
@@ -214,14 +203,10 @@ EOF
         echo "CONFIG_FIRMWARE_ENABLE_XFS=n" >> .config 
         echo "CONFIG_FIRMWARE_ENABLE_FUSE=y" >> .config
         echo "CONFIG_FIRMWARE_ENABLE_SWAP=y" >> .config
-        
-        # USB 设备支持
         echo "CONFIG_FIRMWARE_INCLUDE_UVC=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_HID=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_SERIAL=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_AUDIO=n" >> .config
-        
-        # 网络功能
         echo "CONFIG_FIRMWARE_INCLUDE_XFRM=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_QOS=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_IMQ=y" >> .config
@@ -229,21 +214,15 @@ EOF
         echo "CONFIG_FIRMWARE_INCLUDE_NFSD=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_CIFS=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_NTFS_3G=n" >> .config
-        
-        # 打印机和存储
         echo "CONFIG_FIRMWARE_INCLUDE_LPRD=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_U2EC=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_TCPDUMP=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_HDPARM=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_PARTED=y" >> .config
-        
-        # SMB 和 FTP
         echo "CONFIG_FIRMWARE_INCLUDE_SMBD=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_SMBD36=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_SMBD_SYSLOG=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_FTPD=y" >> .config
-        
-        # 认证和 VPN
         echo "CONFIG_FIRMWARE_INCLUDE_RPL2TP=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_EAP_PEAP=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_DDNS_SSL=y" >> .config
@@ -256,54 +235,38 @@ EOF
         echo "CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_OPENVPN=y" >> .config
-        
-        # 媒体服务器（禁用）
         echo "CONFIG_FIRMWARE_INCLUDE_XUPNPD=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_MINIDLNA=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_FIREFLY=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=n" >> .config
-        
-        # 下载工具（禁用）
         echo "CONFIG_FIRMWARE_INCLUDE_TRANSMISSION=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_TRANSMISSION_WEB_CONTROL=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_ARIA=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL=n" >> .config
-        
-        # 基础工具
         echo "CONFIG_FIRMWARE_INCLUDE_CURL=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_TTYD=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_LRZSZ=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_HTOP=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_NANO=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_IPERF3=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_MTR=y" >> .config
-        
-        # 校园网认证（禁用）
         echo "CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_DOGCOM=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_MINIEAP=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n" >> .config
-        
-        # IPV6 功能
         echo "CONFIG_FIRMWARE_INCLUDE_NAPT66=y" >> .config
-        
-        # VPN 服务器（禁用）
         echo "CONFIG_FIRMWARE_INCLUDE_SSSERVER=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_SERVER=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CLIENT=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CMD=n" >> .config
-        
-        # 其他功能（禁用）
         echo "CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_VLMCSD=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TTYD=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_LRZSZ=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_HTOP=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NANO=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_IPERF3=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_DUMP1090=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_RTL_SDR=n" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MTR=y" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_SOCAT=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_SRELAY=n" >> .config
-        
-        # 内网穿透和 DDNS
+        echo "CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_FRPC=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_FRPS=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_WIREGUARD=n" >> .config
@@ -319,8 +282,6 @@ EOF
         echo "CONFIG_FIRMWARE_INCLUDE_LUCKY=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARE=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_EASYTIER=y" >> .config
-        
-        # 其他工具
         echo "CONFIG_FIRMWARE_INCLUDE_ALIST=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_WXSEND=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_UUPLUGIN=n" >> .config
@@ -335,12 +296,10 @@ EOF
         echo "CONFIG_FIRMWARE_INCLUDE_MSD_LITE=y" >> .config
         
         #########################################################################################
-        # 开始编译
         echo "开始编译..."
         sudo ./clear_tree
         sudo ./build_firmware_modify $TNAME 0
         
-        # 移动编译产物
         if [ -d images ]; then
           sudo mv -f images/*.trx /opt/images/ 2>/dev/null || true
           cp -f .config /opt/images/${TNAME}.config 2>/dev/null || true
