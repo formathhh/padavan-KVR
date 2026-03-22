@@ -1,0 +1,58 @@
+name: 360P2 云编译
+
+on: 
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+      
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot \
+        cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
+        pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
+        
+    - name: Install UPX
+      uses: crazy-max/ghaction-upx@v3
+      with:
+        version: v4.2.4
+        install-only: true
+        
+    - name: Clone source code
+      run: |
+        cd /opt
+        git clone --depth=1 https://github.com/${GITHUB_REPOSITORY}.git rt-n56u
+        cd rt-n56u/toolchain-mipsel
+        sh dl_toolchain.sh
+        
+    - name: Build Firmware
+      env:
+        TNAME: 360P2
+      run: |
+        cd /opt/rt-n56u/trunk
+        cp -f configs/templates/$TNAME.config .config
+        sudo ./clear_tree
+        sudo ./build_firmware_modify $TNAME 0
+        mkdir -p /opt/images
+        sudo mv -f images/*.trx /opt/images/
+        
+    - name: Upload packages
+      uses: actions/upload-artifact@master
+      if: always()
+      with:
+        name: 360P2
+        path: /opt/images
