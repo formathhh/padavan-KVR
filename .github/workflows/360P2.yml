@@ -53,6 +53,9 @@ jobs:
         fi
         cp -f configs/templates/$TNAME.config .config
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
+
+        # 解决内核配置交互问题
+        echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> .config
         ################################################################################################
         ###  清除默认配置###
         sed -i '/CONFIG_FIRMWARE_ENABLE_IPV6/d' .config
