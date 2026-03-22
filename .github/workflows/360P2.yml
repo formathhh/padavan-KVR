@@ -41,35 +41,13 @@ jobs:
         
         # ========== 修改 Web UI 为经典白色主题 ==========
         echo "=== 修改 Web UI 为经典白色主题 ==="
-        
-        # 查找并修改 httpd 目录中的 HTML 内容
         cd /opt/rt-n56u/trunk/user/httpd
         
-        # 查看有哪些文件
-        echo "httpd 目录文件列表:"
-        ls -la
-        
-        # 修改所有 .c 文件中的 HTML 样式（因为 HTML 可能在 C 代码中）
+        # 修改所有 .c 文件中的 HTML 样式
         find . -name "*.c" -o -name "*.h" | while read file; do
-          echo "处理文件: $file"
-          # 修改背景色
           sed -i 's/bgcolor="[^"]*"/bgcolor="#f5f5f5"/g' "$file"
           sed -i 's/background:[^;]*;/background:#f5f5f5;/g' "$file"
-          sed -i 's/background-color:[^;]*;/background-color:#f5f5f5;/g' "$file"
-          # 修改文字颜色
           sed -i 's/color:[^;]*;/color:#333333;/g' "$file"
-          sed -i 's/text="[^"]*"/text="#333333"/g' "$file"
-          # 修改链接颜色
-          sed -i 's/link="[^"]*"/link="#3498db"/g' "$file"
-          sed -i 's/vlink="[^"]*"/vlink="#2980b9"/g' "$file"
-          sed -i 's/alink="[^"]*"/alink="#e74c3c"/g' "$file"
-        done
-        
-        # 如果有独立的 HTML 文件
-        find /opt/rt-n56u/trunk/user -name "*.htm" -o -name "*.html" -o -name "*.asp" 2>/dev/null | while read file; do
-          echo "处理 HTML 文件: $file"
-          sed -i 's/bgcolor="[^"]*"/bgcolor="#f5f5f5"/g' "$file"
-          sed -i 's/background:[^;]*;/background:#f5f5f5;/g' "$file"
         done
         
         echo "=== Web UI 主题修改完成 ==="
@@ -80,11 +58,9 @@ jobs:
         echo '#ifndef EVM_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
         echo '#define EVM_RESTART_VIRTUALHERE  (1 << 14)' >> /opt/rt-n56u/trunk/user/httpd/common.h
         echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '' >> /opt/rt-n56u/trunk/user/httpd/common.h
         echo '#ifndef EVT_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
         echo '#define EVT_RESTART_VIRTUALHERE  EVM_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
         echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
-        echo '' >> /opt/rt-n56u/trunk/user/httpd/common.h
         echo '#ifndef RCN_RESTART_VIRTUALHERE' >> /opt/rt-n56u/trunk/user/httpd/common.h
         echo '#define RCN_RESTART_VIRTUALHERE  1' >> /opt/rt-n56u/trunk/user/httpd/common.h
         echo '#endif' >> /opt/rt-n56u/trunk/user/httpd/common.h
@@ -99,48 +75,32 @@ jobs:
         
         sed -i '/CONFIG_EXT4_FS/d' $KERNEL_CONFIG
         sed -i '/CONFIG_EXT4_USE_FOR_EXT23/d' $KERNEL_CONFIG
-        sed -i '/CONFIG_EXT4_FS_XATTR/d' $KERNEL_CONFIG
-        sed -i '/CONFIG_EXT4_FS_POSIX_ACL/d' $KERNEL_CONFIG
-        sed -i '/CONFIG_EXT4_FS_SECURITY/d' $KERNEL_CONFIG
         
         echo "" >> $KERNEL_CONFIG
-        echo "# EXT4 文件系统支持 - 完整配置" >> $KERNEL_CONFIG
+        echo "# EXT4 文件系统支持" >> $KERNEL_CONFIG
         echo "CONFIG_EXT4_FS=y" >> $KERNEL_CONFIG
         echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> $KERNEL_CONFIG
         echo "CONFIG_EXT4_FS_XATTR=y" >> $KERNEL_CONFIG
         echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> $KERNEL_CONFIG
         echo "CONFIG_EXT4_FS_SECURITY=y" >> $KERNEL_CONFIG
         
-        sed -i 's/SIZ=0x80000/SIZ=0x500000/g' /opt/rt-n56u/trunk/configs/boards/360P2/kernel-3.4.x.config
-        sed -i 's/size_etc="6M"/size_etc="5M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
-        sed -i 's/size_tmp="24M"/size_tmp="30M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
-        sed -i 's/mtd_part_size=65536/mtd_part_size=5242880/g' /opt/rt-n56u/trunk/user/scripts/mtd_storage.sh
+        sed -i 's/SIZ=0x80000/SIZ=0x500000/g' $KERNEL_CONFIG
+        sed -i 's/size_etc="6M"/size_etc="5M"/g' user/scripts/dev_init.sh
+        sed -i 's/size_tmp="24M"/size_tmp="30M"/g' user/scripts/dev_init.sh
         
         # ========== 创建自动配置脚本 ==========
-        echo "=== 创建自动配置脚本 ==="
-        cat > /opt/rt-n56u/trunk/auto_config.sh << 'AUTOSCRIPT'
+        cat > auto_config.sh << 'EOF'
 #!/bin/bash
-cd /opt/rt-n56u/trunk/linux-3.4.x
-
-# 如果 .config 不存在，从板级配置复制
-if [ ! -f .config ]; then
-    cp ../configs/boards/360P2/kernel-3.4.x.config .config
-fi
-
-# 设置所有 EXT4 相关选项
+cd linux-3.4.x
+[ ! -f .config ] && cp ../configs/boards/360P2/kernel-3.4.x.config .config
 echo "CONFIG_EXT4_FS=y" >> .config
 echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> .config
 echo "CONFIG_EXT4_FS_XATTR=y" >> .config
 echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> .config
 echo "CONFIG_EXT4_FS_SECURITY=y" >> .config
-
-# 自动应答所有配置问题
 yes "" | make oldconfig
-
-cd /opt/rt-n56u/trunk
-AUTOSCRIPT
-
-        chmod +x /opt/rt-n56u/trunk/auto_config.sh
+EOF
+        chmod +x auto_config.sh
         
     - name: Build Firmware
       env:
@@ -148,23 +108,42 @@ AUTOSCRIPT
       run: |
         cd /opt/rt-n56u/trunk
         
-        if [ ! -f configs/templates/$TNAME.config ] ; then
-          echo "configs/templates/$TNAME.config 没有找到 "
+        if [ ! -f configs/templates/$TNAME.config ]; then
+          echo "configs/templates/$TNAME.config 没有找到"
           exit 1
         fi
         
         cp -f configs/templates/$TNAME.config .config
+        
+        # 启用 OpenSSL
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
         
-        # ... 中间省略（您的配置保持不变）...
-        
-        echo "=== 运行内核自动配置 ==="
+        # 添加基础功能
+        cat >> .config << 'CONFIG'
+CONFIG_FIRMWARE_ENABLE_IPV6=y
+CONFIG_FIRMWARE_ENABLE_USB=y
+CONFIG_FIRMWARE_ENABLE_EXT4=y
+CONFIG_FIRMWARE_ENABLE_FUSE=y
+CONFIG_FIRMWARE_ENABLE_SWAP=y
+CONFIG_FIRMWARE_INCLUDE_SERIAL=y
+CONFIG_FIRMWARE_INCLUDE_XFRM=y
+CONFIG_FIRMWARE_INCLUDE_QOS=y
+CONFIG_FIRMWARE_INCLUDE_TTYD=y
+CONFIG_FIRMWARE_INCLUDE_ZEROTIER=y
+CONFIG_FIRMWARE_INCLUDE_TAILSCALE=y
+CONFIG_FIRMWARE_INCLUDE_VIRTUALHERE=y
+CONFIG_FIRMWARE_INCLUDE_OPENVPN=y
+CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y
+CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC=y
+CONFIG
+        # 运行内核配置
         ./auto_config.sh
         
-        echo "开始编译..."
+        # 编译
         sudo ./clear_tree
         sudo ./build_firmware_modify $TNAME 0
         
+        # 移动固件
         if [ -d images ]; then
           sudo mv -f images/*.trx /opt/images/ 2>/dev/null || true
           cp -f .config /opt/images/${TNAME}.config 2>/dev/null || true
@@ -189,7 +168,5 @@ AUTOSCRIPT
           > ### ![](https://img.shields.io/badge/%E7%BC%96%E8%AF%91%E6%97%B6%E9%97%B4-${{ env.build_time }}-8267?logo=github&labelColor=%E9%A1%BB)![](https://img.shields.io/github/downloads/${{ github.repository }}/${{ env.tag }}/total?label=%E4%B8%8B%E8%BD%BD%E6%AC%A1%E6%95%B0&logo=github)
           
           `360P2.config` 是集成的插件模板
-          
         tag_name: ${{ env.tag }}
-        files: |
-          /opt/images/*
+        files: /opt/images/*
