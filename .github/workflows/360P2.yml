@@ -77,6 +77,114 @@ jobs:
         sed -i 's/size_tmp="24M"/size_tmp="30M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/mtd_part_size=65536/mtd_part_size=5242880/g' /opt/rt-n56u/trunk/user/scripts/mtd_storage.sh
         
+        echo "=== 修改 Web UI 为浅色主题 ==="
+        
+        cat > /opt/rt-n56u/trunk/user/www/custom.css << 'CSSEND'
+/* 360P2 浅色主题 - 让界面更清晰明亮 */
+body {
+    background: #f0f2f5 !important;
+    color: #1a1a1a !important;
+}
+.main-content, .container, .panel, .tab-content {
+    background-color: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    padding: 15px !important;
+}
+.menu, .nav, .sidebar, .navbar-default {
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%) !important;
+    border: none !important;
+}
+.menu a, .nav a, .sidebar a {
+    color: #ffffff !important;
+}
+.menu a:hover, .nav a:hover {
+    background-color: rgba(255,255,255,0.2) !important;
+}
+table {
+    background-color: #ffffff !important;
+    border: 1px solid #e9ecef !important;
+}
+th {
+    background-color: #f8f9fa !important;
+    color: #495057 !important;
+}
+td {
+    border-bottom: 1px solid #f0f0f0 !important;
+}
+input[type="text"], input[type="password"], select, textarea {
+    background-color: #ffffff !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 4px !important;
+    padding: 6px 12px !important;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25) !important;
+}
+.btn, button, input[type="submit"] {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+    border-radius: 4px !important;
+    padding: 6px 12px !important;
+}
+.btn:hover, button:hover {
+    background-color: #0069d9 !important;
+}
+.btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+.btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+.alert-info {
+    background-color: #d1ecf1 !important;
+    border-color: #bee5eb !important;
+    color: #0c5460 !important;
+}
+.alert-success {
+    background-color: #d4edda !important;
+    border-color: #c3e6cb !important;
+    color: #155724 !important;
+}
+.alert-warning {
+    background-color: #fff3cd !important;
+    border-color: #ffeeba !important;
+    color: #856404 !important;
+}
+.alert-danger {
+    background-color: #f8d7da !important;
+    border-color: #f5c6cb !important;
+    color: #721c24 !important;
+}
+.footer, .copyright {
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+}
+.nav-tabs > li > a {
+    background-color: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    color: #495057 !important;
+}
+.nav-tabs > li.active > a {
+    background-color: #ffffff !important;
+    color: #007bff !important;
+}
+CSSEND
+
+        # 在页面中引入自定义 CSS
+        HEADER_FILE="/opt/rt-n56u/trunk/user/www/header.asp"
+        if [ -f "$HEADER_FILE" ]; then
+            if ! grep -q "custom.css" "$HEADER_FILE"; then
+                sed -i 's|</head>|<link rel="stylesheet" type="text/css" href="custom.css">\n</head>|' "$HEADER_FILE"
+            fi
+        fi
+        
+        echo "Web UI 浅色主题已添加"
+        
         echo "=== 创建自动配置脚本 ==="
         echo '#!/bin/bash' > /opt/rt-n56u/trunk/auto_config.sh
         echo 'cd /opt/rt-n56u/trunk/linux-3.4.x' >> /opt/rt-n56u/trunk/auto_config.sh
