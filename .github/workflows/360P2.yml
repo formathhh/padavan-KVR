@@ -170,3 +170,4 @@ CONFIG
           `360P2.config` 是集成的插件模板
         tag_name: ${{ env.tag }}
         files: /opt/images/*
+      
