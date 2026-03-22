@@ -39,7 +39,7 @@ jobs:
         sh dl_toolchain.sh
         mkdir -p /opt/images/
         
-        # 修复 VirtualHere 编译错误
+        # ========== 修复 VirtualHere 编译错误 ==========
         echo "=== 修复 VirtualHere 宏定义 ==="
         
         echo '/* VirtualHere 宏定义修复 */' >> /opt/rt-n56u/trunk/user/httpd/common.h
@@ -58,26 +58,68 @@ jobs:
         cd /opt/rt-n56u/trunk/user/httpd
         sed -i 's/EVM_RESTART_VIRTUALHERE/EVT_RESTART_VIRTUALHERE/g' variables.c
         
-        # 修复 EXT4 内核配置
+        # ========== 修复 EXT4 内核配置 - 直接修改内核配置文件 ==========
         echo "=== 修复 EXT4 内核配置 ==="
         cd /opt/rt-n56u/trunk
+        
+        # 修改板级内核配置
         KERNEL_CONFIG="configs/boards/360P2/kernel-3.4.x.config"
         
+        # 删除旧的 EXT4 配置
         sed -i '/CONFIG_EXT4_FS/d' $KERNEL_CONFIG
         sed -i '/CONFIG_EXT4_USE_FOR_EXT23/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_FS_XATTR/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_FS_POSIX_ACL/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_FS_SECURITY/d' $KERNEL_CONFIG
         
+        # 添加完整的 EXT4 配置（所有选项都设置为 y）
         echo "" >> $KERNEL_CONFIG
-        echo "# EXT4 文件系统支持" >> $KERNEL_CONFIG
+        echo "# EXT4 文件系统支持 - 完整配置" >> $KERNEL_CONFIG
         echo "CONFIG_EXT4_FS=y" >> $KERNEL_CONFIG
         echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> $KERNEL_CONFIG
+        echo "CONFIG_EXT4_FS_XATTR=y" >> $KERNEL_CONFIG
         echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> $KERNEL_CONFIG
         echo "CONFIG_EXT4_FS_SECURITY=y" >> $KERNEL_CONFIG
+        
+        echo "EXT4 配置已添加"
         
         # 修改内存空间
         sed -i 's/SIZ=0x80000/SIZ=0x500000/g' /opt/rt-n56u/trunk/configs/boards/360P2/kernel-3.4.x.config
         sed -i 's/size_etc="6M"/size_etc="5M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/size_tmp="24M"/size_tmp="30M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/mtd_part_size=65536/mtd_part_size=5242880/g' /opt/rt-n56u/trunk/user/scripts/mtd_storage.sh
+        
+        # ========== 创建自动配置脚本，解决所有内核交互问题 ==========
+        echo "=== 创建自动配置脚本 ==="
+        cat > /opt/rt-n56u/trunk/auto_config.sh << 'AUTOSCRIPT'
+#!/bin/bash
+cd /opt/rt-n56u/trunk/linux-3.4.x
+
+# 如果 .config 不存在，从板级配置复制
+if [ ! -f .config ]; then
+    cp ../configs/boards/360P2/kernel-3.4.x.config .config
+fi
+
+# 设置所有 EXT4 相关选项
+sed -i 's/^# CONFIG_EXT4_FS is not set/CONFIG_EXT4_FS=y/' .config
+sed -i 's/^CONFIG_EXT4_FS=.*/CONFIG_EXT4_FS=y/' .config
+echo "CONFIG_EXT4_FS=y" >> .config
+echo "CONFIG_EXT4_USE_FOR_EXT23=y" >> .config
+echo "CONFIG_EXT4_FS_XATTR=y" >> .config
+echo "CONFIG_EXT4_FS_POSIX_ACL=y" >> .config
+echo "CONFIG_EXT4_FS_SECURITY=y" >> .config
+
+# 自动应答所有配置问题
+yes "" | make oldconfig
+
+# 验证配置
+echo "=== 内核配置验证 ==="
+grep "EXT4" .config | head -10
+
+cd /opt/rt-n56u/trunk
+AUTOSCRIPT
+
+        chmod +x /opt/rt-n56u/trunk/auto_config.sh
         
     - name: Build Firmware
       env:
@@ -296,6 +338,12 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_MSD_LITE=y" >> .config
         
         #########################################################################################
+        # 运行自动配置脚本，解决内核交互问题
+        echo "=== 运行内核自动配置 ==="
+        cd /opt/rt-n56u/trunk
+        ./auto_config.sh
+        
+        # 开始编译
         echo "开始编译..."
         sudo ./clear_tree
         sudo ./build_firmware_modify $TNAME 0
