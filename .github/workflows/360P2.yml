@@ -41,28 +41,80 @@ jobs:
         sh dl_toolchain.sh
         mkdir -p /opt/images/
         
-        # ========== 直接修改板级内核配置文件，永久修复 EXT4 问题 ==========
-        echo "=== 修改内核配置文件，禁用 EXT4 避免编译问题 ==="
-        KERNEL_CONFIG="/opt/rt-n56u/trunk/configs/boards/360P2/kernel-3.4.x.config"
+        # ========== 修复1: VirtualHere 编译错误 ==========
+        echo "=== 修复 VirtualHere 宏定义 ==="
+        
+        cat >> /opt/rt-n56u/trunk/user/httpd/common.h << 'EOF'
+
+/* VirtualHere 宏定义修复 - 由 GitHub Actions 添加 */
+#ifndef EVM_RESTART_VIRTUALHERE
+#define EVM_RESTART_VIRTUALHERE  (1 << 14)
+#endif
+
+#ifndef EVT_RESTART_VIRTUALHERE
+#define EVT_RESTART_VIRTUALHERE  EVM_RESTART_VIRTUALHERE
+#endif
+
+#ifndef RCN_RESTART_VIRTUALHERE
+#define RCN_RESTART_VIRTUALHERE  1
+#endif
+EOF
+        
+        cd /opt/rt-n56u/trunk/user/httpd
+        # 修正 variables.c 中的宏引用
+        sed -i 's/EVM_RESTART_VIRTUALHERE/EVT_RESTART_VIRTUALHERE/g' variables.c
+        
+        # ========== 修复2: EXT4 内核配置，避免交互式问题 ==========
+        echo "=== 修复 EXT4 内核配置 ==="
+        cd /opt/rt-n56u/trunk
+        
+        # 修改板级内核配置文件
+        KERNEL_CONFIG="configs/boards/360P2/kernel-3.4.x.config"
         
         # 备份原配置
         cp $KERNEL_CONFIG ${KERNEL_CONFIG}.bak 2>/dev/null || true
         
         # 删除所有 EXT4 相关配置
-        sed -i '/EXT4/d' $KERNEL_CONFIG
-        sed -i '/ext4/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_FS/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_USE_FOR_EXT23/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_FS_POSIX_ACL/d' $KERNEL_CONFIG
+        sed -i '/CONFIG_EXT4_FS_SECURITY/d' $KERNEL_CONFIG
         
-        # 添加禁用 EXT4 的配置
-        echo "# CONFIG_EXT4_FS is not set" >> $KERNEL_CONFIG
-        echo "# CONFIG_EXT4_USE_FOR_EXT23 is not set" >> $KERNEL_CONFIG
+        # 添加正确的 EXT4 配置（编译进内核，不是模块）
+        cat >> $KERNEL_CONFIG << 'EOF'
+
+# EXT4 文件系统支持 - 修复版
+CONFIG_EXT4_FS=y
+CONFIG_EXT4_USE_FOR_EXT23=y
+CONFIG_EXT4_FS_POSIX_ACL=y
+CONFIG_EXT4_FS_SECURITY=y
+EOF
         
-        echo "内核配置已修改"
+        echo "EXT4 配置已添加到内核配置文件"
         
-        # 修改内存空间和 storage空间
+        # ========== 修复3: 确保内核编译时自动应答 ==========
+        echo "=== 准备内核自动配置脚本 ==="
+        
+        # 创建自动应答脚本
+        cat > /opt/rt-n56u/trunk/auto_config.sh << 'EOF'
+#!/bin/bash
+cd /opt/rt-n56u/trunk/linux-3.4.x
+# 如果配置文件不存在，从板级配置复制
+if [ ! -f .config ]; then
+    cp ../configs/boards/360P2/kernel-3.4.x.config .config
+fi
+# 自动应答所有问题
+yes "" | make oldconfig
+EOF
+        chmod +x /opt/rt-n56u/trunk/auto_config.sh
+        
+        # ========== 修改内存空间配置 ==========
         sed -i 's/SIZ=0x80000/SIZ=0x500000/g' /opt/rt-n56u/trunk/configs/boards/360P2/kernel-3.4.x.config
         sed -i 's/size_etc="6M"/size_etc="5M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/size_tmp="24M"/size_tmp="30M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/mtd_part_size=65536/mtd_part_size=5242880/g' /opt/rt-n56u/trunk/user/scripts/mtd_storage.sh
+        
+        echo "所有修复完成"
         
     - name: Build Firmware
       env:
@@ -178,7 +230,7 @@ jobs:
         # 清除默认配置结束
         
         ######################################################################
-        # 添加你需要的功能配置（注意：EXT4 已禁用）
+        # 添加你需要的功能配置
         ######################################################################
         ##系统组件
         echo "CONFIG_FIRMWARE_ENABLE_IPV6=y" >> .config
@@ -188,7 +240,7 @@ jobs:
         echo "CONFIG_FIRMWARE_ENABLE_EXFAT=n" >> .config
         echo "CONFIG_FIRMWARE_ENABLE_EXT2=n" >> .config
         echo "CONFIG_FIRMWARE_ENABLE_EXT3=n" >> .config
-        echo "CONFIG_FIRMWARE_ENABLE_EXT4=n" >> .config  # 关键：禁用 EXT4
+        echo "CONFIG_FIRMWARE_ENABLE_EXT4=y" >> .config  # ✅ 启用 EXT4
         echo "CONFIG_FIRMWARE_ENABLE_XFS=n" >> .config 
         echo "CONFIG_FIRMWARE_ENABLE_FUSE=y" >> .config
         echo "CONFIG_FIRMWARE_ENABLE_SWAP=y" >> .config
@@ -275,7 +327,7 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_WXSEND=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_UUPLUGIN=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_ALDRIVER=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_VIRTUALHERE=y" >> .config
+        echo "CONFIG_FIRMWARE_INCLUDE_VIRTUALHERE=y" >> .config  # ✅ 启用 VirtualHere
         echo "CONFIG_FIRMWARE_INCLUDE_WYY=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_BAFA=n" >> .config
         echo "CONFIG_FIRMWARE_INCLUDE_CADDY=n" >> .config
@@ -285,6 +337,11 @@ jobs:
         echo "CONFIG_FIRMWARE_INCLUDE_MSD_LITE=y" >> .config
         
         #########################################################################################
+        # 运行内核自动配置（避免交互）
+        echo "=== 运行内核自动配置 ==="
+        cd /opt/rt-n56u/trunk
+        ./auto_config.sh
+        
         # 开始编译
         echo "=== 开始编译固件 ==="
         sudo ./build_firmware_modify $TNAME 0
